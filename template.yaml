@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+
+  SOAR Security Response Hackathon unConference
+
+Resources:
+  SecurityResponseStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/security_response.asl.json
+      DefinitionSubstitutions:
+        QuarantineFunctionArn: !GetAtt QuarantineFunction.Arn
+        TakeImageFunctionArn: !GetAtt TakeImageFunction.Arn
+        RebuildHostFunctionArn: !GetAtt RebuildHostFunction.Arn
+        ForensicDuplicateFunctionArn: !GetAtt ForensicDuplicateFunction.Arn
+        DDBPutItem: !Sub arn:${AWS::Partition}:states:::dynamodb:putItem
+        DDBTable: !Ref TransactionTable
+      Policies: 
+        - LambdaInvokePolicy:
+            FunctionName: !Ref QuarantineFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref TakeImageFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RebuildHostFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ForensicDuplicateFunction
+        - DynamoDBWritePolicy:
+            TableName: !Ref TransactionTable
+
+  QuarantineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/quarantine/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+
+  TakeImageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/take_image/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+
+  RebuildHostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/rebuild_host/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+
+  ForensicDuplicateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/forensic_duplicate/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+
+  TransactionTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      PrimaryKey:
+        Name: Id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+# Outputs:
+#   StockTradingStateMachineArn:
+#     Description: "Stock Trading State machine ARN"
+#     Value: !Ref StockTradingStateMachine
+#   StockTradingStateMachineRoleArn:
+#     Description: "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates"
+#     Value: !GetAtt StockTradingStateMachineRole.Arn

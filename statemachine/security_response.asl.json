@@ -1,0 +1,66 @@
+{
+    "Comment": "A state machine that quarantines compromised resources, rebuilds them with a clean AMI and builds a forensic duplicate for testing.",
+    "StartAt": "Quarantine Compromised Host",
+    "States": {
+        "Quarantine Compromised Host": {
+            "Type": "Task",
+            "Resource": "${QuarantineFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 15,
+                    "MaxAttempts": 5,
+                    "BackoffRate": 1
+                }
+            ],
+            "Next": "Take image of compromised host"
+        },
+        "Take image of compromised host": {
+            "Type": "Task",
+            "Resource": "${TakeImageFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 120,
+                    "MaxAttempts": 5,
+                    "BackoffRate": 1
+                }
+            ],
+            "Next": "Rebuild compromised host with clean AMI"
+        },
+        "Rebuild compromised host with clean AMI": {
+            "Type": "Task",
+            "Resource": "${RebuildHostFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 60,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "Next": "Create forensic duplicate"
+        },
+        "Create forensic duplicate": {
+            "Type": "Task",
+            "Resource": "${ForensicDuplicateFunctionArn}",
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "IntervalSeconds": 60,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 1
+                }
+            ],
+            "End": true
+        }
+    }
+}

@@ -5,7 +5,7 @@
 *~
 
 ### AWS SAM ###
-.aws-sam/*
+.aws-sam/
 samconfig.toml
 
 # temporary files which can be created if a process still has a handle open of a deleted file
@@ -213,7 +213,7 @@ venv.bak/
 .mypy_cache/
 
 ### VisualStudioCode ###
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -246,3 +246,6 @@ $RECYCLE.BIN/
 */build/*
 
 # End of https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
+
+# Temporarily remove tests until rewritten
+tests/
